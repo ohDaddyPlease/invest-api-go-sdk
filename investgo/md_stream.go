@@ -86,8 +86,8 @@ func (mds *MarketDataStream) sendCandlesReq(ids []string, interval pb.Subscripti
 }
 
 // SubscribeOrderBook - метод подписки на стаканы инструментов с одинаковой глубиной
-func (mds *MarketDataStream) SubscribeOrderBook(ids []string, depth int32) (<-chan *pb.OrderBook, error) {
-	err := mds.sendOrderBookReq(ids, depth, pb.SubscriptionAction_SUBSCRIPTION_ACTION_SUBSCRIBE)
+func (mds *MarketDataStream) SubscribeOrderBook(ids []string, depth int32, orderBookType pb.OrderBookType) (<-chan *pb.OrderBook, error) {
+	err := mds.sendOrderBookReq(ids, depth, pb.SubscriptionAction_SUBSCRIPTION_ACTION_SUBSCRIBE, orderBookType)
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +98,8 @@ func (mds *MarketDataStream) SubscribeOrderBook(ids []string, depth int32) (<-ch
 }
 
 // UnSubscribeOrderBook - метод отдписки от стаканов инструментов
-func (mds *MarketDataStream) UnSubscribeOrderBook(ids []string, depth int32) error {
-	err := mds.sendOrderBookReq(ids, depth, pb.SubscriptionAction_SUBSCRIPTION_ACTION_UNSUBSCRIBE)
+func (mds *MarketDataStream) UnSubscribeOrderBook(ids []string, depth int32, orderBookType pb.OrderBookType) error {
+	err := mds.sendOrderBookReq(ids, depth, pb.SubscriptionAction_SUBSCRIPTION_ACTION_UNSUBSCRIBE, orderBookType)
 	if err != nil {
 		return err
 	}
@@ -109,12 +109,13 @@ func (mds *MarketDataStream) UnSubscribeOrderBook(ids []string, depth int32) err
 	return nil
 }
 
-func (mds *MarketDataStream) sendOrderBookReq(ids []string, depth int32, act pb.SubscriptionAction) error {
+func (mds *MarketDataStream) sendOrderBookReq(ids []string, depth int32, act pb.SubscriptionAction, orderBookType pb.OrderBookType) error {
 	instruments := make([]*pb.OrderBookInstrument, 0, len(ids))
 	for _, id := range ids {
 		instruments = append(instruments, &pb.OrderBookInstrument{
-			Depth:        depth,
-			InstrumentId: id,
+			Depth:         depth,
+			InstrumentId:  id,
+			OrderBookType: orderBookType,
 		})
 	}
 	return mds.stream.Send(&pb.MarketDataRequest{
@@ -370,7 +371,7 @@ func (mds *MarketDataStream) UnSubscribeAll() error {
 		}
 
 		for depth, ids := range orderBooks {
-			err := mds.UnSubscribeOrderBook(ids, depth)
+			err := mds.UnSubscribeOrderBook(ids, depth, pb.OrderBookType_ORDERBOOK_TYPE_UNSPECIFIED)
 			if err != nil {
 				return err
 			}
