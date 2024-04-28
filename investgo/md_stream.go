@@ -309,7 +309,7 @@ func (mds *MarketDataStream) Stop() {
 }
 
 // UnSubscribeAll - Метод отписки от всей информации, отслеживаемой на данный момент
-func (mds *MarketDataStream) UnSubscribeAll() error {
+func (mds *MarketDataStream) UnSubscribeAll(orderBookType pb.OrderBookType) error {
 	ids := make([]string, 0)
 	if len(mds.subs.candles) > 0 {
 		candleSubs := make(map[candleSub][]string, 0)
@@ -371,7 +371,7 @@ func (mds *MarketDataStream) UnSubscribeAll() error {
 		}
 
 		for depth, ids := range orderBooks {
-			err := mds.UnSubscribeOrderBook(ids, depth, pb.OrderBookType_ORDERBOOK_TYPE_UNSPECIFIED)
+			err := mds.UnSubscribeOrderBook(ids, depth, orderBookType)
 			if err != nil {
 				return err
 			}
